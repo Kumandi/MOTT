@@ -1,0 +1,14 @@
+{
+  "name": "mott",
+  "version": "1.0.0",
+  "description": "MOTT — Malayalam movies currently on OTT, newest release first",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "stremio-addon-sdk": "^1.6.10",
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  }
+}
