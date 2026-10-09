@@ -34,13 +34,16 @@ async function toImdbId(tmdbId) {
   }
 }
 
-async function discoverLatestOnOtt(skip) {
+// catalogId: "mott-latest" (confirmed streaming) or "mott-new" (India digital release date)
+async function discoverMovies(catalogId, skip) {
   const page = Math.floor((skip || 0) / 20) + 1;
   const today = new Date().toISOString().slice(0, 10);
-  const url = `${TMDB}/discover/movie?api_key=${TMDB_KEY}` +
-    `&with_original_language=ml&primary_release_date.lte=${today}` +
-    `&watch_region=IN&with_watch_monetization_types=flatrate|ads|rent|buy` +
-    `&sort_by=primary_release_date.desc&page=${page}`;
+  const filters = catalogId === "mott-new"
+    ? `&region=IN&with_release_type=4&release_date.lte=${today}&sort_by=release_date.desc`
+    : `&primary_release_date.lte=${today}&watch_region=IN` +
+      `&with_watch_monetization_types=flatrate|ads|rent|buy&sort_by=primary_release_date.desc`;
+  const url = `${TMDB}/discover/movie?api_key=${TMDB_KEY}&with_original_language=ml` +
+    `${filters}&page=${page}`;
 
   const data = await cachedGet(url);
   const results = data.results || [];
@@ -93,7 +96,7 @@ async function getMeta(imdbOrTmdbId) {
 
 const manifest = {
   id: "org.mott.malayalam",
-  version: "1.0.0",
+  version: "1.1.0",
   name: "MOTT",
   description: "Malayalam movies currently on OTT in India, newest release first",
   resources: ["catalog", "meta"],
@@ -105,6 +108,12 @@ const manifest = {
       id: "mott-latest",
       name: "MOTT — Latest on OTT",
       extra: [{ name: "skip" }]
+    },
+    {
+      type: "movie",
+      id: "mott-new",
+      name: "MOTT — Just Released (Digital)",
+      extra: [{ name: "skip" }]
     }
   ]
 };
@@ -112,9 +121,10 @@ const manifest = {
 const builder = new addonBuilder(manifest);
 
 builder.defineCatalogHandler(async ({ id, extra }) => {
-  if (id !== "mott-latest") return { metas: [] };
-  const metas = await discoverLatestOnOtt(extra && extra.skip);
-  return { metas };
+  if (id !== "mott-latest" && id !== "mott-new") return { metas: [] };
+  const metas = await discoverMovies(id, extra && extra.skip);
+  // Short cache hints so Nuvio re-checks within the hour instead of holding old lists
+  return { metas, cacheMaxAge: 3600, staleRevalidate: 3600 };
 });
 
 builder.defineMetaHandler(async ({ id }) => {
