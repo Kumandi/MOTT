@@ -106,13 +106,13 @@ const manifest = {
     {
       type: "movie",
       id: "mott-latest",
-      name: "MOTT — Latest on OTT",
+      name: "Popular Movies",
       extra: [{ name: "skip" }]
     },
     {
       type: "movie",
       id: "mott-new",
-      name: "MOTT — Just Released (Digital)",
+      name: "Recently Added",
       extra: [{ name: "skip" }]
     }
   ]
